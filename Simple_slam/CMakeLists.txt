@@ -19,7 +19,7 @@ if (BUILD_SHARED_LIBS)
 endif()
 
 add_executable(helloworld helloworld.cc)
-target_link_libraries(helloworld Simple_slam)
+target_link_libraries(helloworld ceres)
 
 #################
 # add_executable(add_residual_1 add_residual_1.cc)
@@ -49,5 +49,5 @@ target_link_libraries(helloworld Simple_slam)
 #add_executable(helloceres_pose2d_fixed_b helloceres_pose_2d_fixed_b.cc)
 #target_link_libraries(helloceres_pose2d_fixed_b ceres)
 #################
-add_executable(pass_by_address auxiliary/pass_by_address.cpp)
-target_link_libraries(pass_by_address ceres)
+# add_executable(pass_by_address auxiliary/pass_by_address.cpp)
+# target_link_libraries(pass_by_address ceres)
