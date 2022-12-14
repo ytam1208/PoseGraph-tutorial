@@ -42,7 +42,7 @@ include_directories(
 #   src/${PROJECT_NAME}/Graph_tuto.cpp
 # )
 
-add_executable(${PROJECT_NAME}_node  src/DataBase.cpp src/ICP.cpp src/kdtree.cpp src/Graph.cpp)
+add_executable(${PROJECT_NAME}_node  src/DataBase.cpp src/ICP.cpp src/kdtree.cpp src/Solver.cpp src/Graph.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 

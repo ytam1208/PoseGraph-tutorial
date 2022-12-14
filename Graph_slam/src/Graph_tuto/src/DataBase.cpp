@@ -7,46 +7,50 @@ bool DB::load_lm_data(std::string& input_file_path)
 
     int DB_size = 0;
     double _odom[3];
-    DBloader.read((char*)&DB_size, sizeof(int));
-
     node read_node;
     std::vector<node> DB_node_laser_v;
+
+    DBloader.read((char*)&DB_size, sizeof(int));
     int loop_size;
     for(int i = 0; i < DB_size; i++){
-        DBloader.read((char*)&read_node.idx, sizeof(int));
-        DBloader.read((char*)_odom, sizeof(double) * 3);
+        DBloader.read((char *)&read_node.idx, sizeof(int));
+        DBloader.read((char *)_odom, sizeof(double) * 3);
         read_node.x = _odom[0];
         read_node.y = _odom[1];
         read_node.th = _odom[2];
 
         int row, col;
-        DBloader.read((char*)&col, sizeof(int));
-        DBloader.read((char*)&row, sizeof(int));
+        DBloader.read((char *)&col, sizeof(int));
+        DBloader.read((char *)&row, sizeof(int));
         if(col == 0 && row == 0)    return false;
 
-        cv::Point2f laser_pt(0.0f, 0.0f);
         cv::Mat Points = cv::Mat(row, col, CV_32FC1);
         DBloader.read((char*)Points.data, sizeof(float)*col*row); 
+
+        cv::Point2f laser_pt(0.0f, 0.0f);
         loop_size = Points.rows;
-        for(int rows = 0; rows < loop_size; rows++){
-            laser_pt.x = Points.at<float>(rows, 0);
-            laser_pt.y = Points.at<float>(rows, 1);
+        for(int i = 0; i < loop_size; i++){
+            laser_pt.x = Points.at<float>(i, 0);
+            laser_pt.y = Points.at<float>(i, 1);
+            // std::cout << "size = " << loop_size << ", " << laser_pt.x << ", " << laser_pt.y << std::endl;
             read_node.laser_DB.push_back(laser_pt);
         }
-        DB_node_laser_v.push_back(read_node);
-    }  
 
-    for(auto ref_node : ref_vector){
-        for(auto& DB_node : DB_node_laser_v){
-            if(DB_node.idx == ref_node.idx){
-                if(ref_node.laser_DB.size())    ref_node.laser_DB.clear();
-                ref_node.laser_DB.shrink_to_fit();  // or...std::vector<cv::Point2f>().swap(ref_node.laser_DB);
-                ref_node.laser_DB.resize(DB_node.laser_DB.size());
-                std::copy(DB_node.laser_DB.begin(), DB_node.laser_DB.end(), ref_node.laser_DB.begin());
-            }
-        }
-    }
+        DB_node_laser_v.push_back(read_node);
+        read_node.laser_DB.clear();
+    }  
+    DBloader.close();
     
+    int ref_loop_size = ref_vector.size();
+    int DB_loop_size = DB_node_laser_v.size();
+    for(int i = 0; i < ref_loop_size; i++){
+        DB_node_laser_v[i].x = ref_vector[i].x;
+        DB_node_laser_v[i].y = ref_vector[i].y;
+        DB_node_laser_v[i].th = ref_vector[i].th;
+        DB_node_laser_v[i].idx = ref_vector[i].idx;
+    }
+    ref_vector.swap(DB_node_laser_v);
+
     std::vector<cv::Point2f>().swap(read_node.laser_DB);
     std::vector<node>().swap(DB_node_laser_v);
     return true;
@@ -76,16 +80,15 @@ bool DB::load_odom_data(std::string& input_file_path)
         ref_node.x = std::stof(line[1]);
         ref_node.y = std::stof(line[2]);
         ref_node.th = std::stof(line[3]);
-
         if(ref_node.th < 0.0)
             ref_node.th = ref_node.th + 360.0;
-
+        // std::cout << ref_node.idx << ", " << ref_node.x << ", " << ref_node.y << ", " << ref_node.th << std::endl;
         std::string way_point = line[4];
         line.clear();
         ref_vector.push_back(ref_node);
     }
-
     DBloader.close();
+
     return true;
 }
 
@@ -117,6 +120,7 @@ bool DB::load_Life_long_data(std::string &filename_odom, std::string &filename_l
       std::vector<std::string>().swap(line);
     }
     int v_size = observation.size();
+    infile_odom.close();
 
     std::ifstream infile_laser(filename_laser.c_str(), std::ios_base::in | std::ios_base::binary);
     if(!infile_laser.is_open()) return false;
@@ -138,6 +142,7 @@ bool DB::load_Life_long_data(std::string &filename_odom, std::string &filename_l
             if(observation[j].idx == laser_idx)
                 observation[j].laser_DB.push_back(read_laser_pt);
     }
+    infile_laser.close();
     return true;
 }
 
