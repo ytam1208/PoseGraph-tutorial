@@ -49,27 +49,30 @@ bool Graph::Solver_::BuildOptimizationProblem()
     ceres::LossFunction* loss_function = nullptr;
     ceres::Manifold* angle_manifold = ceres::examples::AngleManifold::Create();
 
+    const Eigen::Matrix3d information = Eigen::Matrix3d::Identity();  
     int ref_size = my_data.ref_vector.size();
     for(const auto& Relative_node : my_data.measure_vector){
-        // const Eigen::Matrix3d sqrt_information = constraint.information.llt().matrixL();
-        ceres::CostFunction* cost_function = PoseGraph2dErrorTerm::Create(Relative_node.x, Relative_node.y, Relative_node.th, NULL);
+        const Eigen::Matrix3d sqrt_information = information.llt().matrixL();
+        ceres::CostFunction* cost_function = Graph::PoseGraph2dErrorTerm::Create(Relative_node.x, Relative_node.y, Relative_node.th, sqrt_information);
         for(int i = 0; i < ref_size; i++){
-            problem.AddResidualBlock(cost_function,
-                                     NULL,
-                                     my_data.ref_vector[i].x,
-                                     my_data.ref_vector[i].y,
-                                     my_data.ref_vector[i].th,
-                                     my_data.observation[i].x,
-                                     my_data.observation[i].y,
-                                     my_data.observation[i].th);
-                                     
-            problem.SetManifold(my_data.ref_vector[i].th, angle_manifold);
-            problem.SetManifold(my_data.observation[i].th, angle_manifold);
+            if(my_data.ref_vector[i].idx == my_data.observation[i].idx){
+                problem.AddResidualBlock(cost_function,
+                                        loss_function,
+                                        &my_data.ref_vector[i].x,
+                                        &my_data.ref_vector[i].y,
+                                        &my_data.ref_vector[i].th,
+                                        &my_data.observation[i].x,
+                                        &my_data.observation[i].y,
+                                        &my_data.observation[i].th);
+
+                problem.SetManifold(&my_data.ref_vector[i].th, angle_manifold);
+                problem.SetManifold(&my_data.observation[i].th, angle_manifold);
+            }
         }
         auto iter = my_data.ref_vector.begin();
-        problem.SetParameterBlockConstant(iter.x);
-        problem.SetParameterBlockConstant(iter.y);
-        problem.SetParameterBlockConstant(iter.th);
+        problem.SetParameterBlockConstant(&iter->x);
+        problem.SetParameterBlockConstant(&iter->y);
+        problem.SetParameterBlockConstant(&iter->th);
     }
 
     return true;
@@ -82,10 +85,11 @@ bool Graph::Solver_::SolveOptimizationProblem()
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 
     ceres::Solver::Summary summary;
-    ceres::Solve(options, problem, &summary);
+    ceres::Solve(options, &problem, &summary);
 
     std::cout << summary.FullReport() << '\n';
-    Check(OutputPoses("poses_optimized.txt", my_data.ref_vector), "OutputPoses");
+    Check(my_data.OutputPoses("poses_optimized_ref.txt", my_data.ref_vector), "OutputPoses");
+    Check(my_data.OutputPoses("poses_optimized_obs.txt", my_data.observation), "OutputPoses");
 
     return true;
 }

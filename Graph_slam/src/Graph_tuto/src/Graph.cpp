@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
   Graph::Solver_ sv;
 
-  std::string folder_path = "/home/cona/git/Graph-SLAM/Graph_slam/data_map/Map1/";
+  std::string folder_path = "/home/cona/git/Graph-SLAM/Graph_slam/data_map/Map2/";
   std::string file_odo_name = folder_path + "map_file.txt";
   std::string file_laser_name = folder_path +"lm_data.dat";
 

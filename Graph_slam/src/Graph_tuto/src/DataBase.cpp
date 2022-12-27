@@ -82,6 +82,8 @@ bool DB::load_odom_data(std::string& input_file_path)
         ref_node.th = std::stof(line[3]);
         if(ref_node.th < 0.0)
             ref_node.th = ref_node.th + 360.0;
+
+        ref_node.th *=  (M_PI/180.0);
         // std::cout << ref_node.idx << ", " << ref_node.x << ", " << ref_node.y << ", " << ref_node.th << std::endl;
         std::string way_point = line[4];
         line.clear();
@@ -115,6 +117,7 @@ bool DB::load_Life_long_data(std::string &filename_odom, std::string &filename_l
       read_node.y = std::stof(line[2]);
       if(std::stof(line[3]) < 0.0)  read_node.th = std::stof(line[3]) + 360.0;
       else read_node.th = std::stof(line[3]);
+      read_node.th *=  (M_PI/180.0); 
 
       observation.push_back(read_node);
       std::vector<std::string>().swap(line);
