@@ -1,2 +1,0 @@
-Graph_tuto
--DCATKIN_DEVEL_PREFIX=/home/cona/git/Graph-SLAM/Graph_slam/devel -DCMAKE_INSTALL_PREFIX=/home/cona/git/Graph-SLAM/Graph_slam/install -G Unix Makefiles
